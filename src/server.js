@@ -4,7 +4,6 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const pool = require('./config/db'); 
 const userRoutes = require('./routes/userRoutes');
-// const { getMe } = require('./controllers/userController'); 
 
 const app = express();
 
