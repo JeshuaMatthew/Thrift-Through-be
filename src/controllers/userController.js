@@ -50,7 +50,7 @@ const loginUser = async (req, res) => {
 
         res.cookie('token', token, {
             httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000 // 1 day in milliseconds
+            maxAge: 24 * 60 * 60 * 1000
         });
 
         delete user.password;
@@ -62,25 +62,64 @@ const loginUser = async (req, res) => {
     }
 };
 
-// NEW: CHECK IF LOGGED IN (The getMe function your frontend asked for)
 const getMe = async (req, res) => {
     try {
-        // 1. Look in the cookies for the 'token'
         const token = req.cookies.token;
         if (!token) return res.status(401).json({ error: 'Not logged in' });
 
-        // 2. Verify the token's signature using our secret key
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // 3. Find the user in the database using the ID packed inside the token
         const result = await pool.query('SELECT user_id, full_name, user_name, email FROM users WHERE user_id = $1', [decoded.id]);
         
-        // 4. Send the user data back!
         res.json(result.rows[0]);
     } catch (err) {
-        // If the token is fake or expired, it throws an error
         res.status(401).json({ error: 'Invalid or expired token' });
     }
 };
 
-module.exports = { getAllUsers, createUser, loginUser, getMe };
+const uploadProfilePic = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Please upload an image file' });
+        }
+
+        const user_id = req.user.id;
+        
+        const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+
+        const result = await pool.query(
+            'UPDATE users SET profile_pict_url = $1 WHERE user_id = $2 RETURNING *',
+            [imageUrl, user_id]
+        );
+
+        res.json({ message: 'Profile picture updated successfully!', user: result.rows[0] });
+
+    } catch (err) {
+        console.error("Error uploading image:", err.message);
+        res.status(500).json({ error: 'Server error during upload' });
+    }
+};
+
+const uploadUserBanner = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Please upload an image file' });
+        }
+
+        const user_id = req.user.id; 
+        const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+
+        const result = await pool.query(
+            'UPDATE users SET banner_img_url = $1 WHERE user_id = $2 RETURNING *',
+            [imageUrl, user_id]
+        );
+
+        res.json({ message: 'Banner updated successfully!', user: result.rows[0] });
+
+    } catch (err) {
+        console.error("Error uploading banner:", err.message);
+        res.status(500).json({ error: 'Server error during upload' });
+    }
+};
+
+module.exports = { getAllUsers, createUser, loginUser, getMe, uploadProfilePic, uploadUserBanner };
