@@ -8,7 +8,8 @@ const pool = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const itemRoutes = require('./routes/itemRoutes');
 const communityRoutes = require('./routes/communityRoutes');
-const chatRoutes = require('./routes/chatRoutes')
+const chatRoutes = require('./routes/chatRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/ai', aiRoutes);
 
 const PORT = process.env.PORT || 5000;
 
