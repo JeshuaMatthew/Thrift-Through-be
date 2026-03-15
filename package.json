@@ -8,8 +8,9 @@
     "migration:run": "npx typeorm migration:run -d src/config/data-source.js",
     "migration:revert": "npx typeorm migration:revert -d src/config/data-source.js",
     "migration:show": "npx typeorm migration:show -d src/config/data-source.js",
-    "seed:run": "node -e \"const SeedDataSource = require('./src/config/seed-data-source.js'); SeedDataSource.initialize().then(() => SeedDataSource.runMigrations())\"",
-    "env": "node -e \"require('fs').copyFileSync('.env.example', '.env')\""
+    "seed:run": "node -e \"const ds = require('./src/config/seed-data-source.js'); ds.initialize().then(() => ds.runMigrations()).then(() => { console.log('Seeding selesai!'); process.exit(0); }).catch(err => { console.error('Seeding gagal:', err); process.exit(1); })\"",
+    "env": "node -e \"require('fs').copyFileSync('.env.example', '.env')\"",
+    "seed:revert": "node -e \"const ds = require('./src/config/seed-data-source.js'); ds.initialize().then(() => ds.undoLastMigration()).then(() => { console.log('Revert seed selesai!'); process.exit(0); }).catch(err => { console.error('Revert gagal:', err); process.exit(1); })\""
   },
   "keywords": [],
   "author": "",

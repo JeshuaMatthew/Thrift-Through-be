@@ -22,7 +22,7 @@ const chatSocket = (io) => {
                     RETURNING *;
                 `;
                 const result = await pool.query(sqlQuery, [community_id, user_id, chat_text]);
-                const newMessage = result.rows[0];
+                const newMessage = result[0];
 
                 // 2. Broadcast ke semua orang di room komunitas tersebut
                 io.to(`community_${community_id}`).emit('receive_message', newMessage);
@@ -47,9 +47,9 @@ const chatSocket = (io) => {
                 `;
                 const result = await pool.query(updateQuery, [new_text, chat_id, user_id]);
 
-                if (result.rows.length > 0) {
+                if (result.length > 0) {
                     // 2. Broadcast perubahan
-                    io.to(`community_${community_id}`).emit('message_edited', result.rows[0]);
+                    io.to(`community_${community_id}`).emit('message_edited', result[0]);
                 } else {
                     socket.emit('error', { message: 'Gagal mengedit pesan: Tidak ditemukan atau bukan milik Anda' });
                 }
@@ -74,7 +74,7 @@ const chatSocket = (io) => {
                 `;
                 const result = await pool.query(deleteQuery, [chat_id, user_id]);
 
-                if (result.rows.length > 0) {
+                if (result.length > 0) {
                     // 2. Broadcast penghapusan
                     io.to(`community_${community_id}`).emit('message_deleted', { chat_id });
                 } else {

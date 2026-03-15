@@ -11,7 +11,7 @@ const SeedDataSource = new DataSource({
     synchronize: false,
     logging: true,
     entities: [],
-    migrations: ['src/seeds/*.js'],
+    migrations: [path.join(__dirname, '../seeds/*.js')], 
     subscribers: [],
     migrationsTableName: "seeds_metadata"
 });

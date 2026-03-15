@@ -74,7 +74,6 @@ const analyzeCarbon = async (req, res) => {
 };
 
 module.exports = {
-    generateContent,
     analyzePrice,
     analyzeCarbon
 };

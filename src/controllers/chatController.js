@@ -10,7 +10,7 @@ const getChatHistory = async (req, res) => {
             [communityId, userId]
         );
 
-        if (checkMember.rows.length === 0) {
+        if (checkMember.length === 0) {
             return res.status(403).json({ error: 'Forbidden: You are not a member of this chat' });
         }
 
@@ -19,7 +19,7 @@ const getChatHistory = async (req, res) => {
             [communityId]
         );
 
-        res.json(history.rows);
+        res.json(history);
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ error: 'Server error fetching chat history' });
@@ -47,8 +47,8 @@ const searchMyChats = async (req, res) => {
         const result = await pool.query(sqlQuery, [userId, `%${keyword}%`]);
 
         res.json({
-            resultsFound: result.rows.length,
-            messages: result.rows
+            resultsFound: result.length,
+            messages: result
         });
     } catch (err) {
         console.error(err.message);
@@ -56,4 +56,39 @@ const searchMyChats = async (req, res) => {
     }
 };
 
-module.exports = { getChatHistory, searchMyChats };
+const getMyChatList = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Query untuk mendapatkan semua komunitas (Grup & DM) yang diikuti user
+        const sqlQuery = `
+            SELECT 
+                c.community_id, 
+                c.community_name, 
+                c.community_type, 
+                c.profile_pict_url as community_pic,
+                c.is_public,
+                (SELECT chat_text FROM chats WHERE community_id = c.community_id ORDER BY date_sent DESC LIMIT 1) as last_message,
+                (SELECT date_sent FROM chats WHERE community_id = c.community_id ORDER BY date_sent DESC LIMIT 1) as last_message_date,
+                -- Jika tipe directchat, ambil info user lawan bicaranya
+                target_u.user_id as target_user_id,
+                target_u.full_name as target_full_name,
+                target_u.profile_pict_url as target_profile_pic
+            FROM communities c
+            JOIN community_members cm ON c.community_id = cm.community_id
+            LEFT JOIN community_members target_cm ON c.community_id = target_cm.community_id AND target_cm.member_id != $1 AND c.community_type = 'directchat'
+            LEFT JOIN users target_u ON target_cm.member_id = target_u.user_id
+            WHERE cm.member_id = $1
+            ORDER BY last_message_date DESC NULLS LAST;
+        `;
+
+        const result = await pool.query(sqlQuery, [userId]);
+
+        res.json(result);
+    } catch (err) {
+        console.error("Error fetching chat list:", err.message);
+        res.status(500).json({ error: 'Server error fetching chat list' });
+    }
+};
+
+module.exports = { getChatHistory, searchMyChats, getMyChatList };

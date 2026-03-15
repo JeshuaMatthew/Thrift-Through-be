@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const multer = require('multer');
 const path = require('path');
 require('dotenv').config();
 const pool = require('./config/db'); 
@@ -31,8 +32,18 @@ app.use(cors({
     credentials: true 
 }));
 
-app.use(express.json()); 
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error("Global Error:", err);
+    if (err instanceof multer.MulterError) {
+        return res.status(400).json({ error: `Multer Error: ${err.message}` });
+    }
+    res.status(500).json({ error: err.message || 'Something went wrong!' });
+});
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/users', userRoutes);
@@ -48,6 +59,13 @@ app.get('/', (req, res) => {
     res.send('Thrift-Through Backend is officially running with WebSockets!');
 });
 
-server.listen(PORT, () => {
-    console.log(`🚀 Server is listening on port ${PORT}`);
-});
+pool.initialize()
+    .then(() => {
+        console.log("✅ Data Source has been initialized!");
+        server.listen(PORT, () => {
+            console.log(`🚀 Server is listening on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error("❌ Error during Data Source initialization:", err);
+    });
