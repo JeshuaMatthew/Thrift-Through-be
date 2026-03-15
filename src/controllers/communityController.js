@@ -42,9 +42,6 @@ const createCommunity = async (req, res) => {
             [communityId, user_id, 'Admin', 'Active']
         );
 
-        // Tambah 5 poin untuk pembuat komunitas
-        await pool.query('UPDATE users SET user_point = user_point + 5 WHERE user_id = $1', [user_id]);
-
         res.json({ message: 'Community created!', community: newCommunity[0] });
     } catch (err) {
         console.error(err.message);
@@ -414,7 +411,7 @@ const getCommunityMembers = async (req, res) => {
         if (checkMember.length === 0) return res.status(403).json({ error: 'Forbidden' });
 
         const members = await pool.query(`
-            SELECT cm.*, u.user_id, u.full_name, u.user_name, u.profile_pict_url, u.email, u.phone_num, u.user_rank, u.user_point, u.banner_img_url
+            SELECT cm.*, u.user_id, u.full_name, u.user_name, u.profile_pict_url, u.email, u.phone_num, u.banner_img_url
             FROM community_members cm
             JOIN users u ON cm.member_id = u.user_id
             WHERE cm.community_id = $1

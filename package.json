@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
     "migration:run": "npx typeorm migration:run -d src/config/data-source.js",
     "migration:revert": "npx typeorm migration:revert -d src/config/data-source.js",
     "migration:show": "npx typeorm migration:show -d src/config/data-source.js",

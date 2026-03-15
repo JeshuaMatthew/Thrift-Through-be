@@ -15,9 +15,6 @@ const createItem = async (req, res) => {
         
         const result = await pool.query(sqlQuery, [item_name, price, category, longitude, latitude, user_id, item_description, item_quantity, transaction_type || 'Jual', item_pict_url]);
         
-        // Tambah 2 poin untuk pembuat item
-        await pool.query('UPDATE users SET user_point = user_point + 2 WHERE user_id = $1', [user_id]);
-
         res.json(result[0]);
     } catch (err) {
         console.error("Error creating item:", err.message);

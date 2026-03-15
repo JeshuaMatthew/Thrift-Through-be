@@ -14,10 +14,16 @@ const getChatHistory = async (req, res) => {
             return res.status(403).json({ error: 'Forbidden: You are not a member of this chat' });
         }
 
-        const history = await pool.query(
-            'SELECT * FROM chats WHERE community_id = $1 ORDER BY date_sent ASC',
-            [communityId]
-        );
+        const historyQuery = `
+            SELECT 
+                chat_id, community_id, user_id, 
+                CASE WHEN is_deleted = true THEN 'Pesan ini telah dihapus' ELSE chat_text END as chat_text, 
+                date_sent, is_deleted 
+            FROM chats 
+            WHERE community_id = $1 
+            ORDER BY date_sent ASC;
+        `;
+        const history = await pool.query(historyQuery, [communityId]);
 
         res.json(history);
     } catch (err) {
@@ -40,7 +46,7 @@ const searchMyChats = async (req, res) => {
             FROM chats c
             JOIN communities com ON c.community_id = com.community_id
             JOIN community_members cm ON com.community_id = cm.community_id
-            WHERE cm.member_id = $1 AND c.chat_text ILIKE $2
+            WHERE cm.member_id = $1 AND c.chat_text ILIKE $2 AND c.is_deleted = false
             ORDER BY c.date_sent DESC;
         `;
 
@@ -68,7 +74,7 @@ const getMyChatList = async (req, res) => {
                 c.community_type, 
                 c.profile_pict_url as community_pic,
                 c.is_public,
-                (SELECT chat_text FROM chats WHERE community_id = c.community_id ORDER BY date_sent DESC LIMIT 1) as last_message,
+                (SELECT CASE WHEN is_deleted = true THEN 'Pesan ini telah dihapus' ELSE chat_text END FROM chats WHERE community_id = c.community_id ORDER BY date_sent DESC LIMIT 1) as last_message,
                 (SELECT date_sent FROM chats WHERE community_id = c.community_id ORDER BY date_sent DESC LIMIT 1) as last_message_date,
                 -- Jika tipe directchat, ambil info user lawan bicaranya
                 target_u.user_id as target_user_id,

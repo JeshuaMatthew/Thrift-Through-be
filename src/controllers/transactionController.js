@@ -49,7 +49,8 @@ const getMySales = async (req, res) => {
 
         let sqlQuery = `
             SELECT t.*, 
-                   u.full_name as buyer_name, u.email as buyer_email, u.profile_pict_url as buyer_profile_pict,
+                   u.full_name as buyer_name, u.user_name as buyer_user_name, u.email as buyer_email, 
+                   u.phone_num as buyer_phone_num, u.profile_pict_url as buyer_profile_pict, u.banner_img_url as buyer_banner_img,
                    i.item_name, i.category, i.price as item_original_price, i.item_pict_url,
                    i.longitude, i.latitude
             FROM transactions t
@@ -132,7 +133,8 @@ const getMyPurchases = async (req, res) => {
 
         let sqlQuery = `
             SELECT t.*, 
-                   u.full_name as seller_name, u.email as seller_email, u.profile_pict_url as seller_profile_pict,
+                   u.full_name as seller_name, u.user_name as seller_user_name, u.email as seller_email, 
+                   u.phone_num as seller_phone_num, u.profile_pict_url as seller_profile_pict, u.banner_img_url as seller_banner_img,
                    i.item_name, i.category, i.price as item_original_price, i.item_pict_url,
                    i.longitude, i.latitude
             FROM transactions t
@@ -241,10 +243,6 @@ const updateTransactionStatus = async (req, res) => {
 
         if (status === 'Paid' && transaction.status === 'Accepted') {
             if (transaction.seller_id !== user_id) return res.status(403).json({ error: 'Only sellers can mark as Paid' });
-            
-            // Tambah 20 poin ke Penjual dan Pembeli
-            await pool.query('UPDATE users SET user_point = user_point + 20 WHERE user_id = $1', [transaction.seller_id]);
-            await pool.query('UPDATE users SET user_point = user_point + 20 WHERE user_id = $1', [transaction.buyer_id]);
         }
 
         const updateQuery = 'UPDATE transactions SET status = $1 WHERE transaction_id = $2 RETURNING *';

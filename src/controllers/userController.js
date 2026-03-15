@@ -149,7 +149,7 @@ const logoutUser = (req, res) => {
 const getUserById = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await pool.query('SELECT user_id, full_name, user_name, email, phone_num, user_rank, user_point, profile_pict_url, banner_img_url FROM users WHERE user_id = $1', [id]);
+        const result = await pool.query('SELECT user_id, full_name, user_name, email, phone_num, profile_pict_url, banner_img_url FROM users WHERE user_id = $1', [id]);
         
         if (!result || result.length === 0) {
             return res.status(404).json({ error: 'User not found' });
@@ -162,4 +162,34 @@ const getUserById = async (req, res) => {
     }
 };
 
-module.exports = { getAllUsers, getUserById, createUser, loginUser, getMe, uploadProfilePic, uploadUserBanner, logoutUser };
+const updateMe = async (req, res) => {
+    try {
+        const token = req.cookies.token;
+        if (!token) return res.status(401).json({ error: 'Not logged in' });
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const { full_name, user_name, email, phone_num } = req.body;
+
+        const result = await pool.query(
+            `UPDATE users 
+             SET full_name = COALESCE($1, full_name), 
+                 user_name = COALESCE($2, user_name), 
+                 email = COALESCE($3, email), 
+                 phone_num = COALESCE($4, phone_num) 
+             WHERE user_id = $5 
+             RETURNING *`,
+            [full_name, user_name, email, phone_num, decoded.id]
+        );
+
+        if (!result || result.length === 0) return res.status(404).json({ error: 'User not found' });
+
+        const user = result[0];
+        delete user.password;
+        res.json(user);
+    } catch (err) {
+        console.error("UpdateMe Error:", err.message);
+        res.status(500).json({ error: 'Server error during update' });
+    }
+};
+
+module.exports = { getAllUsers, getUserById, createUser, loginUser, getMe, uploadProfilePic, uploadUserBanner, logoutUser, updateMe };
