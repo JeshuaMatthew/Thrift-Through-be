@@ -1,7 +1,7 @@
 const { DataSource } = require('typeorm');
 require('dotenv').config();
 
-const AppDataSource = new DataSource({
+const SeedDataSource = new DataSource({
     type: 'postgres',
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT || '5432'),
@@ -11,8 +11,9 @@ const AppDataSource = new DataSource({
     synchronize: false,
     logging: true,
     entities: [],
-    migrations: ['src/migrations/*.js'],
+    migrations: ['src/seeds/*.js'],
     subscribers: [],
+    migrationsTableName: "seeds_metadata"
 });
 
-module.exports = AppDataSource;
+module.exports = SeedDataSource;
