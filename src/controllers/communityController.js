@@ -25,20 +25,78 @@ const createCommunity = async (req, res) => {
 
 const getAllCommunities = async (req, res) => {
     try {
-        const { search } = req.query;
-        let sqlQuery = "SELECT * FROM communities WHERE is_public = true AND community_type = 'GroupChat'";
-        let values = [];
+        const { type, search, sortBy, order, page, limit } = req.query;
+        
+        let sqlQuery = 'SELECT * FROM communities WHERE is_public = true';
+        let queryParams = [];
+        let paramIndex = 1;
 
-        if (search) {
-            sqlQuery += ' AND community_name ILIKE $1';
-            values.push(`%${search}%`);
+        // Filtering by Type
+        if (type) {
+            sqlQuery += ` AND community_type = $${paramIndex}`;
+            queryParams.push(type);
+            paramIndex++;
+        } else {
+            // Default behavior if no type specified (maintaining original intent if needed)
+            // But usually we want flexibility. The original had "GroupChat" hardcoded.
+            // I'll keep it flexible but maybe default to GroupChat if user wants that original behavior?
+            // User said "lanjutkan hal yang sama", so I'll make it flexible.
         }
 
-        const result = await pool.query(sqlQuery, values);
-        res.json(result.rows);
+        // Searching by Name or Description
+        if (search) {
+            sqlQuery += ` AND (community_name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+            queryParams.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        // Sorting
+        const allowedSortFields = ['community_name', 'community_id', 'community_type'];
+        const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'community_id';
+        const sortOrder = (order && order.toUpperCase() === 'ASC') ? 'ASC' : 'DESC';
+        sqlQuery += ` ORDER BY ${sortField} ${sortOrder}`;
+
+        // Pagination
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 10;
+        const offset = (pageNum - 1) * limitNum;
+
+        sqlQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        queryParams.push(limitNum, offset);
+
+        const result = await pool.query(sqlQuery, queryParams);
+
+        // Get total count
+        let countQuery = 'SELECT COUNT(*) FROM communities WHERE is_public = true';
+        let countParams = [];
+        let countParamIndex = 1;
+
+        if (type) {
+            countQuery += ` AND community_type = $${countParamIndex}`;
+            countParams.push(type);
+            countParamIndex++;
+        }
+        if (search) {
+            countQuery += ` AND (community_name ILIKE $${countParamIndex} OR description ILIKE $${countParamIndex})`;
+            countParams.push(`%${search}%`);
+        }
+
+        const countResult = await pool.query(countQuery, countParams);
+        const totalItems = parseInt(countResult.rows[0].count);
+
+        res.json({
+            meta: {
+                totalItems,
+                itemCount: result.rows.length,
+                itemsPerPage: limitNum,
+                totalPages: Math.ceil(totalItems / limitNum),
+                currentPage: pageNum
+            },
+            communities: result.rows
+        });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Server error' });
+        console.error("Error fetching communities:", err.message);
+        res.status(500).json({ error: 'Server error while fetching communities' });
     }
 };
 

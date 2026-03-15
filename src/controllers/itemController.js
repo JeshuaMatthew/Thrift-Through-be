@@ -2,17 +2,17 @@ const pool = require('../config/db');
 
 const createItem = async (req, res) => {
     try {
-        const { item_name, price, category, longitude, latitude, item_description, item_quantity } = req.body;
+        const { item_name, price, category, longitude, latitude, item_description, item_quantity, transaction_type } = req.body;
         
         const user_id = req.user.id; 
         
         const sqlQuery = `
-            INSERT INTO items (item_name, price, category, longitude, latitude, user_id, item_status, item_description, item_quantity) 
-            VALUES ($1, $2, $3, $4, $5, $6, 'Available', $7, $8) 
+            INSERT INTO items (item_name, price, category, longitude, latitude, user_id, item_status, item_description, item_quantity, transaction_type) 
+            VALUES ($1, $2, $3, $4, $5, $6, 'Available', $7, $8, $9) 
             RETURNING *;
         `;
         
-        const result = await pool.query(sqlQuery, [item_name, price, category, longitude, latitude, user_id, item_description, item_quantity]);
+        const result = await pool.query(sqlQuery, [item_name, price, category, longitude, latitude, user_id, item_description, item_quantity, transaction_type || 'Uang']);
         
         res.json(result.rows[0]);
     } catch (err) {
@@ -23,11 +23,73 @@ const createItem = async (req, res) => {
 
 const getAllItems = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM items WHERE item_status = $1', ['Available']);
-        res.json(result.rows);
+        const { category, search, sortBy, order, page, limit } = req.query;
+        
+        let sqlQuery = 'SELECT * FROM items WHERE item_status = $1';
+        let queryParams = ['Available'];
+        let paramIndex = 2;
+
+        // Filtering by Category
+        if (category) {
+            sqlQuery += ` AND category = $${paramIndex}`;
+            queryParams.push(category);
+            paramIndex++;
+        }
+
+        // Searching by Name or Description
+        if (search) {
+            sqlQuery += ` AND (item_name ILIKE $${paramIndex} OR item_description ILIKE $${paramIndex})`;
+            queryParams.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        // Sorting
+        const allowedSortFields = ['price', 'item_name', 'last_updated_price', 'item_id'];
+        const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'item_id';
+        const sortOrder = (order && order.toUpperCase() === 'ASC') ? 'ASC' : 'DESC';
+        sqlQuery += ` ORDER BY ${sortField} ${sortOrder}`;
+
+        // Pagination
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 10;
+        const offset = (pageNum - 1) * limitNum;
+
+        sqlQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        queryParams.push(limitNum, offset);
+
+        const result = await pool.query(sqlQuery, queryParams);
+
+        // Get total count for pagination metadata
+        let countQuery = 'SELECT COUNT(*) FROM items WHERE item_status = $1';
+        let countParams = ['Available'];
+        let countParamIndex = 2;
+
+        if (category) {
+            countQuery += ` AND category = $${countParamIndex}`;
+            countParams.push(category);
+            countParamIndex++;
+        }
+        if (search) {
+            countQuery += ` AND (item_name ILIKE $${countParamIndex} OR item_description ILIKE $${countParamIndex})`;
+            countParams.push(`%${search}%`);
+        }
+
+        const countResult = await pool.query(countQuery, countParams);
+        const totalItems = parseInt(countResult.rows[0].count);
+
+        res.json({
+            meta: {
+                totalItems,
+                itemCount: result.rows.length,
+                itemsPerPage: limitNum,
+                totalPages: Math.ceil(totalItems / limitNum),
+                currentPage: pageNum
+            },
+            items: result.rows
+        });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Server error' });
+        console.error("Error fetching items:", err.message);
+        res.status(500).json({ error: 'Server error while fetching items' });
     }
 };
 
@@ -51,7 +113,7 @@ const getItemById = async (req, res) => {
 const updateItem = async (req, res) => {
     try {
         const { id } = req.params; 
-        const { item_name, price, item_status, item_description } = req.body; 
+        const { item_name, price, item_status, item_description, transaction_type } = req.body; 
         const user_id = req.user.id;
 
         const checkOwnership = await pool.query('SELECT user_id FROM items WHERE item_id = $1', [id]);
@@ -66,12 +128,12 @@ const updateItem = async (req, res) => {
 
         const sqlQuery = `
             UPDATE items 
-            SET item_name = $1, price = $2, item_status = $3, item_description = $4 
-            WHERE item_id = $5 
+            SET item_name = $1, price = $2, item_status = $3, item_description = $4, transaction_type = $5
+            WHERE item_id = $6 
             RETURNING *;
         `;
         
-        const result = await pool.query(sqlQuery, [item_name, price, item_status, item_description, id]);
+        const result = await pool.query(sqlQuery, [item_name, price, item_status, item_description, transaction_type, id]);
         res.json(result.rows[0]);
     } catch (err) {
         console.error("Error updating item:", err.message);
@@ -170,10 +232,70 @@ const uploadItemPic = async (req, res) => {
 const getMyItems = async (req, res) => {
     try {
         const user_id = req.user.id; 
+        const { category, search, sortBy, order, page, limit } = req.query;
         
-        const result = await pool.query('SELECT * FROM items WHERE user_id = $1 ORDER BY item_id DESC', [user_id]);
-        
-        res.json(result.rows);
+        let sqlQuery = 'SELECT * FROM items WHERE user_id = $1';
+        let queryParams = [user_id];
+        let paramIndex = 2;
+
+        // Filtering by Category
+        if (category) {
+            sqlQuery += ` AND category = $${paramIndex}`;
+            queryParams.push(category);
+            paramIndex++;
+        }
+
+        // Searching
+        if (search) {
+            sqlQuery += ` AND (item_name ILIKE $${paramIndex} OR item_description ILIKE $${paramIndex})`;
+            queryParams.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        // Sorting
+        const allowedSortFields = ['price', 'item_name', 'last_updated_price', 'item_id'];
+        const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'item_id';
+        const sortOrder = (order && order.toUpperCase() === 'ASC') ? 'ASC' : 'DESC';
+        sqlQuery += ` ORDER BY ${sortField} ${sortOrder}`;
+
+        // Pagination
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 10;
+        const offset = (pageNum - 1) * limitNum;
+
+        sqlQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        queryParams.push(limitNum, offset);
+
+        const result = await pool.query(sqlQuery, queryParams);
+
+        // Get total count
+        let countQuery = 'SELECT COUNT(*) FROM items WHERE user_id = $1';
+        let countParams = [user_id];
+        let countParamIndex = 2;
+
+        if (category) {
+            countQuery += ` AND category = $${countParamIndex}`;
+            countParams.push(category);
+            countParamIndex++;
+        }
+        if (search) {
+            countQuery += ` AND (item_name ILIKE $${countParamIndex} OR item_description ILIKE $${countParamIndex})`;
+            countParams.push(`%${search}%`);
+        }
+
+        const countResult = await pool.query(countQuery, countParams);
+        const totalItems = parseInt(countResult.rows[0].count);
+
+        res.json({
+            meta: {
+                totalItems,
+                itemCount: result.rows.length,
+                itemsPerPage: limitNum,
+                totalPages: Math.ceil(totalItems / limitNum),
+                currentPage: pageNum
+            },
+            items: result.rows
+        });
     } catch (err) {
         console.error("Error fetching user items:", err.message);
         res.status(500).json({ error: 'Server error fetching your items' });
