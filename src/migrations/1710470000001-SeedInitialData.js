@@ -1,4 +1,5 @@
 const { MigrationInterface, QueryRunner } = require("typeorm");
+const bcrypt = require("bcrypt");
 
 module.exports = class SeedInitialData1710470000001 {
     async up(queryRunner) {
@@ -13,11 +14,14 @@ module.exports = class SeedInitialData1710470000001 {
             { name: 'Siti Aminah', username: 'sitiaminah', email: 'siti@mail.com', phone: '081234567894', rank: 'Silver', point: 95 }
         ];
 
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash('password123', saltRounds);
+
         for (const user of users) {
             await queryRunner.query(
                 `INSERT INTO users (full_name, user_name, profile_pict_url, email, phone_num, password, user_rank, user_point) 
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                [user.name, user.username, 'https://dummyimage.com/150x150/000/fff', user.email, user.phone, 'password123', user.rank, user.point]
+                [user.name, user.username, 'https://dummyimage.com/150x150/000/fff', user.email, user.phone, hashedPassword, user.rank, user.point]
             );
         }
 
