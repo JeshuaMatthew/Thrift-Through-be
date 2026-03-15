@@ -8,6 +8,7 @@
     "migration:run": "npx typeorm-ts-node-commonjs migration:run -d src/config/data-source.js",
     "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d src/config/data-source.js",
     "migration:show": "npx typeorm-ts-node-commonjs migration:show -d src/config/data-source.js",
+    "seed:run": "node -e \"const { SeedDataSource } = require('./src/config/data-source'); SeedDataSource.initialize().then(() => SeedDataSource.runMigrations())\"",
     "env": "node -e \"require('fs').copyFileSync('.env.example', '.env')\""
   },
   "keywords": [],
@@ -25,6 +26,7 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "pg": "^8.20.0",
+    "socket.io": "^4.8.3",
     "typeorm": "^0.3.28"
   }
 }

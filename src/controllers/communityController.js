@@ -16,6 +16,9 @@ const createCommunity = async (req, res) => {
             [communityId, user_id, 'Admin', 'Active']
         );
 
+        // Tambah 5 poin untuk pembuat komunitas
+        await pool.query('UPDATE users SET user_point = user_point + 5 WHERE user_id = $1', [user_id]);
+
         res.json({ message: 'Community created!', community: newCommunity.rows[0] });
     } catch (err) {
         console.error(err.message);

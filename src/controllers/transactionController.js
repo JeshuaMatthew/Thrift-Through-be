@@ -102,9 +102,13 @@ const updateTransactionStatus = async (req, res) => {
         const updateQuery = 'UPDATE transactions SET status = $1 WHERE transaction_id = $2 RETURNING *';
         const result = await pool.query(updateQuery, [status, id]);
 
-        // Jika transaksi Complete, update item status ke Sold Out
+        // Jika transaksi Complete, update item status ke Sold Out dan tambah poin
         if (status === 'Completed') {
             await pool.query('UPDATE items SET item_status = $1 WHERE item_id = $2', ['Sold Out', transaction.item_id]);
+            
+            // Tambah 20 poin ke Penjual dan Pembeli
+            await pool.query('UPDATE users SET user_point = user_point + 20 WHERE user_id = $1', [transaction.seller_id]);
+            await pool.query('UPDATE users SET user_point = user_point + 20 WHERE user_id = $1', [transaction.buyer_id]);
         }
 
         res.json(result.rows[0]);

@@ -13,6 +13,18 @@ const aiRoutes = require('./routes/aiRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 
 const app = express();
+const server = require('http').createServer(app);
+const { Server } = require('socket.io');
+
+const io = new Server(server, {
+    cors: {
+        origin: 'http://localhost:5173',
+        credentials: true
+    }
+});
+
+const chatSocket = require('./socket/chatSocket');
+chatSocket(io);
 
 app.use(cors({
     origin: 'http://localhost:5173', 
@@ -33,9 +45,9 @@ app.use('/api/transactions', transactionRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.get('/', (req, res) => {
-    res.send('Thrift-Through Backend is officially running!');
+    res.send('Thrift-Through Backend is officially running with WebSockets!');
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`🚀 Server is listening on port ${PORT}`);
 });
