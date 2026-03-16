@@ -53,7 +53,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/transactions', transactionRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = 8080;
 
 app.get('/', (req, res) => {
     res.send('Thrift-Through Backend is officially running with WebSockets!');
