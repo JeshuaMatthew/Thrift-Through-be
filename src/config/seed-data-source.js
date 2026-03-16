@@ -13,7 +13,10 @@ const SeedDataSource = new DataSource({
     entities: [],
     migrations: [path.join(__dirname, '../seeds/*.js')], 
     subscribers: [],
-    migrationsTableName: "seeds_metadata"
+    migrationsTableName: "seeds_metadata",
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 module.exports = SeedDataSource;

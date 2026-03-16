@@ -13,6 +13,9 @@ const AppDataSource = new DataSource({
     entities: [],
     migrations: ['src/migrations/*.js'],
     subscribers: [],
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 module.exports = AppDataSource;
