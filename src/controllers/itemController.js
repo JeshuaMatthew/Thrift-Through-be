@@ -129,7 +129,19 @@ const updateItem = async (req, res) => {
 
         const sqlQuery = `
             UPDATE items 
-            SET item_name = $1, price = $2, item_status = $3, item_description = $4, transaction_type = $5
+            SET 
+                item_name = $1, 
+                price = $2, 
+                item_status = $3, 
+                item_description = $4, 
+                transaction_type = $5,
+                last_price_analysis = NULL,
+                ai_price_analysis = NULL,
+                ai_price_analysis_text = NULL,
+                ai_carbon_analysis = NULL,
+                ai_carbon_analysis_text = NULL,
+                last_carbon_analysis = NULL,
+                market_price = NULL
             WHERE item_id = $6 
             RETURNING *;
         `;

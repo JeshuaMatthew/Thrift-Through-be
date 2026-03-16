@@ -36,27 +36,27 @@ module.exports = class SeedInitialData1710470000001 {
         }
 
         // ==========================================
-        // 2. SEED COMMUNITIES (Bandung & Sulawesi)
+        // 2. SEED COMMUNITIES (Tema Elektronik & Gadget)
         // ==========================================
         const communities = [
             // BANDUNG AREA
-            { name: 'Petani Organik Lembang', desc: 'Wadah berbagi ilmu tani organik Bandung Utara.', lat: -6.8146, lng: 107.6185, type: 'Pertanian', public: true },
-            { name: 'Kopi Jabar Juara', desc: 'Komunitas pengolah kopi Gunung Halu dan Ciwidey.', lat: -7.1009, lng: 107.4468, type: 'Perkebunan', public: true },
-            { name: 'Teknologi Bandung Digital', desc: 'Pegiat tech startup di area Bandung Kota.', lat: -6.9175, lng: 107.6191, type: 'Teknologi', public: true },
-            { name: 'Pengerajin Sepatu Cibaduyut', desc: 'Kumpulan UMKM sepatu lokal legendaris.', lat: -6.9475, lng: 107.5936, type: 'Kerajinan', public: false },
+            { name: 'PC Master Race Bandung', desc: 'Komunitas rakit PC dan jual beli komponen Bandung.', lat: -6.8146, lng: 107.6185, type: 'Teknologi', public: true },
+            { name: 'Jual Beli HP Bekas Jabar', desc: 'Pusat barter dan jual gadget second area Jawa Barat.', lat: -7.1009, lng: 107.4468, type: 'Perdagangan', public: true },
+            { name: 'Bandung Audiophile', desc: 'Pecinta perangkat audio, headphone, dan speaker.', lat: -6.9175, lng: 107.6191, type: 'Hobi', public: true },
+            { name: 'Teknisi Elektronik Cibaduyut', desc: 'Forum berbagi tips service TV, Kulkas, dll.', lat: -6.9475, lng: 107.5936, type: 'Teknologi', public: false },
 
             // SULAWESI AREA
-            { name: 'Kawanua Bakobong (Manado)', desc: 'Komunitas pekebun cengkeh dan pala Minahasa.', lat: 1.3228, lng: 124.8398, type: 'Perkebunan', public: true },
-            { name: 'Nelayan Tuna Bitung', desc: 'Persatuan nelayan ekspor tuna Bitung.', lat: 1.4450, lng: 125.1887, type: 'Perikanan', public: false },
-            { name: 'Punggawa Dagang Makassar', desc: 'Jaringan pedagang pasar butung dan sekitarnya.', lat: -5.1476, lng: 119.4327, type: 'Perdagangan', public: true },
-            { name: 'Wisata Bunaken Reborn', desc: 'Pemandu wisata dan pelestari lingkungan laut.', lat: 1.5833, lng: 124.7667, type: 'Pariwisata', public: true }
+            { name: 'Makassar Gadget Mania', desc: 'Tukar tambah dan review smartphone di Makassar.', lat: -5.1476, lng: 119.4327, type: 'Perdagangan', public: true },
+            { name: 'Home Appliance Second Minahasa', desc: 'Lapak jual beli perangkat rumah tangga second.', lat: 1.3228, lng: 124.8398, type: 'Perdagangan', public: true },
+            { name: 'Sulawesi Visual Tech', desc: 'Komunitas pengguna TV 4K, Proyektor, & Monitor.', lat: 1.4450, lng: 125.1887, type: 'Teknologi', public: false },
+            { name: 'Pasar Aksesoris & Lainnya', desc: 'Grup khusus kabel, charger, router, dan powerbank.', lat: 1.5833, lng: 124.7667, type: 'Perdagangan', public: true }
         ];
 
         for (const comm of communities) {
             await queryRunner.query(
                 `INSERT INTO communities (community_name, description, profile_pict_url, banner_img_url, latitude, longitude, community_type, is_public) 
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                [comm.name, comm.desc, 'https://dummyimage.com/200x200/27ae60/fff', 'https://dummyimage.com/1200x400/27ae60/fff', comm.lat, comm.lng, comm.type, comm.public]
+                [comm.name, comm.desc, 'https://dummyimage.com/200x200/3498db/fff', 'https://dummyimage.com/1200x400/3498db/fff', comm.lat, comm.lng, comm.type, comm.public]
             );
         }
 
@@ -85,9 +85,9 @@ module.exports = class SeedInitialData1710470000001 {
         // 4. SEED CHATS
         // ==========================================
         const chats = [
-            { comm_id: 1, user_id: 14, text: 'Bibit tomat sedang ready di gudang Lembang.' },
-            { comm_id: 5, user_id: 3, text: 'Harga cengkeh jemur kering naik minggu ini.' },
-            { comm_id: 7, user_id: 6, text: 'Ada info kontainer masuk ke pelabuhan Soekarno-Hatta?' }
+            { comm_id: 1, user_id: 14, text: 'Ada yang jual monitor 144hz bekas area Lembang?' },
+            { comm_id: 5, user_id: 3, text: 'Tukar tambah iPhone 11 ke 12 daerah Makassar dong, siap nambah.' },
+            { comm_id: 7, user_id: 6, text: 'Minta rekomendasi tempat service Smart TV yang aman.' }
         ];
 
         for (const chat of chats) {
@@ -98,51 +98,48 @@ module.exports = class SeedInitialData1710470000001 {
         }
 
         // ==========================================
-        // 5. SEED ITEMS (20 Items: Bandung & Sulawesi)
+        // 5. SEED ITEMS (20 Items: Kategori Elektronik)
         // ==========================================
         const items = [
             // Bandung Items
-            { name: 'Sayur Kol Organik 1kg', price: 15000, market: 18000, cat: 'Pertanian', lat: -6.8146, lng: 107.6185, user_id: 14, type: 'Jual' },
-            { name: 'Kopi Arabika Gunung Halu', price: 95000, market: 110000, cat: 'Perkebunan', lat: -7.1009, lng: 107.4468, user_id: 2, type: 'Jual' },
-            { name: 'Sepatu Kulit Formal', price: 450000, market: 600000, cat: 'Fashion', lat: -6.9475, lng: 107.5936, user_id: 15, type: 'Jual' },
-            { name: 'Laptop Bekas Dell XPS', price: 8000000, market: 8500000, cat: 'Elektronik', lat: -6.9175, lng: 107.6191, user_id: 8, type: 'Barter' },
-            { name: 'Pupuk Kompos Premium', price: 25000, market: 30000, cat: 'Pertanian', lat: -6.8222, lng: 107.6333, user_id: 14, type: 'Jual' },
-            { name: 'Kamera Sony A6000', price: 5000000, market: 5500000, cat: 'Elektronik', lat: -6.8900, lng: 107.6100, user_id: 1, type: 'Jual' },
-            { name: 'Jersey Persib Original', price: 350000, market: 400000, cat: 'Fashion', lat: -6.9575, lng: 107.6236, user_id: 2, type: 'Jual' },
-            { name: 'Meja Kayu Jati Minimalis', price: 1200000, market: 1500000, cat: 'Furniture', lat: -6.9000, lng: 107.6000, user_id: 7, type: 'Jual' },
-            { name: 'Tanaman Hias Aglonema', price: 75000, market: 100000, cat: 'Hobi', lat: -6.8100, lng: 107.6200, user_id: 14, type: 'Barter' },
-            { name: 'Madu Hutan Asli Ciwidey', price: 120000, market: 150000, cat: 'Makanan', lat: -7.1500, lng: 107.4500, user_id: 5, type: 'Jual' },
+            { name: 'Laptop Bekas Dell XPS 13', price: 8000000, market: 8500000, cat: 'Gadget', lat: -6.9175, lng: 107.6191, user_id: 8, type: 'Jual' },
+            { name: 'Monitor LED LG 24 Inch', price: 1200000, market: 1500000, cat: 'Perangkat visual', lat: -6.8146, lng: 107.6185, user_id: 14, type: 'Jual' },
+            { name: 'Speaker Bluetooth JBL Charge 4', price: 1100000, market: 1300000, cat: 'Perangkat Audio', lat: -6.9575, lng: 107.6236, user_id: 2, type: 'Barter' },
+            { name: 'Microwave Sharp Second', price: 650000, market: 850000, cat: 'Perangkat Rumah Tangga', lat: -6.9475, lng: 107.5936, user_id: 15, type: 'Jual' },
+            { name: 'Smartphone Samsung S21', price: 6000000, market: 6500000, cat: 'Gadget', lat: -6.8222, lng: 107.6333, user_id: 14, type: 'Barter' },
+            { name: 'Proyektor Epson Mini', price: 2500000, market: 3000000, cat: 'Perangkat visual', lat: -6.8900, lng: 107.6100, user_id: 1, type: 'Jual' },
+            { name: 'Headphone Sony WH-1000XM4', price: 3200000, market: 3800000, cat: 'Perangkat Audio', lat: -7.1009, lng: 107.4468, user_id: 2, type: 'Jual' },
+            { name: 'Kipas Angin Berdiri Miyako', price: 150000, market: 250000, cat: 'Perangkat Rumah Tangga', lat: -6.9000, lng: 107.6000, user_id: 7, type: 'Jual' },
+            { name: 'Tablet iPad Pro 2020', price: 9500000, market: 10500000, cat: 'Gadget', lat: -6.8100, lng: 107.6200, user_id: 14, type: 'Barter' },
+            { name: 'Kabel HDMI 5 Meter & Adaptor', price: 75000, market: 100000, cat: 'lainnya', lat: -7.1500, lng: 107.4500, user_id: 5, type: 'Jual' },
 
             // Sulawesi Items
-            { name: 'Ikan Tuna Fresh 5kg', price: 250000, market: 300000, cat: 'Perikanan', lat: 1.4450, lng: 125.1887, user_id: 10, type: 'Jual' },
-            { name: 'Cengkeh Kering 10kg', price: 1200000, market: 1350000, cat: 'Perkebunan', lat: 1.3228, lng: 124.8398, user_id: 3, type: 'Jual' },
-            { name: 'Kain Sutra Bugis', price: 750000, market: 900000, cat: 'Fashion', lat: -5.1476, lng: 119.4327, user_id: 6, type: 'Jual' },
-            { name: 'Sambal Roa Botol', price: 35000, market: 45000, cat: 'Makanan', lat: 1.4748, lng: 124.8421, user_id: 13, type: 'Jual' },
-            { name: 'Smartphone Android 5G', price: 2800000, market: 3100000, cat: 'Elektronik', lat: -5.1333, lng: 119.4167, user_id: 12, type: 'Jual' },
-            { name: 'Motor Honda Vario 2020', price: 14000000, market: 15500000, cat: 'Otomotif', lat: 1.4500, lng: 125.1900, user_id: 10, type: 'Jual' },
-            { name: 'Alat Pancing Profesional', price: 850000, market: 1100000, cat: 'Hobi', lat: 1.5800, lng: 124.7600, user_id: 4, type: 'Barter' },
-            { name: 'Kacang Mete Makassar', price: 150000, market: 180000, cat: 'Makanan', lat: -5.1600, lng: 119.4500, user_id: 11, type: 'Jual' },
-            { name: 'Minyak Kayu Putih Ambon', price: 65000, market: 80000, cat: 'Kesehatan', lat: 1.4600, lng: 124.8300, user_id: 13, type: 'Jual' },
-            { name: 'Perahu Nelayan Kecil', price: 7000000, market: 8500000, cat: 'Lainnya', lat: 1.4400, lng: 125.1800, user_id: 10, type: 'Jual' }
+            { name: 'iPhone 13 Pro Max 256GB', price: 14000000, market: 15500000, cat: 'Gadget', lat: -5.1333, lng: 119.4167, user_id: 12, type: 'Jual' },
+            { name: 'Smart TV Samsung 43 Inch', price: 4200000, market: 4800000, cat: 'Perangkat visual', lat: 1.4450, lng: 125.1887, user_id: 10, type: 'Jual' },
+            { name: 'Home Theater Polytron', price: 1500000, market: 1900000, cat: 'Perangkat Audio', lat: 1.3228, lng: 124.8398, user_id: 3, type: 'Jual' },
+            { name: 'Kulkas 2 Pintu LG', price: 2800000, market: 3500000, cat: 'Perangkat Rumah Tangga', lat: -5.1476, lng: 119.4327, user_id: 6, type: 'Jual' },
+            { name: 'Smartwatch Garmin Fenix', price: 6500000, market: 7500000, cat: 'Gadget', lat: 1.4748, lng: 124.8421, user_id: 13, type: 'Jual' },
+            { name: 'Kamera Mirrorless Sony A6000', price: 5000000, market: 5500000, cat: 'Perangkat visual', lat: 1.4500, lng: 125.1900, user_id: 10, type: 'Barter' },
+            { name: 'Earphone TWS Apple AirPods Pro', price: 2200000, market: 2800000, cat: 'Perangkat Audio', lat: 1.5800, lng: 124.7600, user_id: 4, type: 'Jual' },
+            { name: 'Mesin Cuci Front Load Samsung', price: 3500000, market: 4200000, cat: 'Perangkat Rumah Tangga', lat: -5.1600, lng: 119.4500, user_id: 11, type: 'Jual' },
+            { name: 'Powerbank Anker 20000mAh', price: 450000, market: 600000, cat: 'lainnya', lat: 1.4600, lng: 124.8300, user_id: 13, type: 'Jual' },
+            { name: 'Router WiFi TP-Link', price: 250000, market: 350000, cat: 'lainnya', lat: 1.4400, lng: 125.1800, user_id: 10, type: 'Jual' }
         ];
 
         for (const item of items) {
-            const aiPrice = JSON.stringify({ analysis: "Harga stabil", trend: "Naik" });
-            const aiCarbon = JSON.stringify({ carbon_score: 85, impact: "Low" });
-
+            // Semua field terkait AI di-set menjadi NULL sesuai request
             await queryRunner.query(
                 `INSERT INTO items (
-                    item_name, price, item_pict_url, market_price, last_price_analysis, 
+                    item_name, price, item_pict_url, market_price, 
                     category, latitude, longitude, user_id, item_status, 
                     item_description, item_quantity, transaction_type, 
-                    ai_price_analysis, ai_price_analysis_text, ai_carbon_analysis, ai_carbon_analysis_text, last_carbon_analysis
-                ) VALUES ($1, $2, $3, $4, NOW(), $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())`,
+                    ai_price_analysis, ai_price_analysis_text, last_price_analysis,
+                    ai_carbon_analysis, ai_carbon_analysis_text, last_carbon_analysis
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NULL, NULL, NULL, NULL, NULL, NULL)`,
                 [
                     item.name, item.price, 'https://dummyimage.com/400x400/34495e/fff', item.market,
                     item.cat, item.lat, item.lng, item.user_id, 'Available',
-                    `Kondisi bagus, nego tipis untuk item ${item.name}`, 1, item.type,
-                    aiPrice, "Berdasarkan tren pasar, harga ini sudah kompetitif.",
-                    aiCarbon, "Produk ini memiliki jejak karbon rendah karena produksi lokal.",
+                    `Kondisi masih sangat bagus, pemakaian wajar. Cocok untuk kebutuhan Anda.`, 1, item.type
                 ]
             );
         }
@@ -151,9 +148,9 @@ module.exports = class SeedInitialData1710470000001 {
         // 6. SEED TRANSACTIONS
         // ==========================================
         const transactions = [
-            { item_id: 1, buyer_id: 1, seller_id: 14, price: 15000, type: 'Jual' },
-            { item_id: 12, buyer_id: 13, seller_id: 3, price: 1200000, type: 'Jual' },
-            { item_id: 14, buyer_id: 4, seller_id: 13, price: 35000, type: 'Jual' }
+            { item_id: 2, buyer_id: 1, seller_id: 14, price: 1200000, type: 'Jual' },
+            { item_id: 14, buyer_id: 13, seller_id: 6, price: 2800000, type: 'Jual' },
+            { item_id: 19, buyer_id: 4, seller_id: 13, price: 450000, type: 'Jual' }
         ];
 
         for (const trx of transactions) {

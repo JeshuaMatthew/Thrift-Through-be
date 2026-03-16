@@ -61,9 +61,9 @@ module.exports = class InitialSchema1710470000000 {
             CREATE TABLE items (
                 item_id SERIAL PRIMARY KEY,
                 item_name VARCHAR(255),
-                price DECIMAL(100, 5),
+                price BIGINT,
                 item_pict_url TEXT,
-                market_price DECIMAL(100, 5),
+                market_price BIGINT,
                 last_price_analysis TIMESTAMP,
                 category VARCHAR(255),
                 longitude DECIMAL,
@@ -89,7 +89,7 @@ module.exports = class InitialSchema1710470000000 {
                 buyer_id INT REFERENCES users(user_id),
                 seller_id INT REFERENCES users(user_id),
                 transaction_date TIMESTAMP,
-                final_price DECIMAL(100, 5),
+                final_price BIGINT,
                 transaction_type VARCHAR(255),
                 status VARCHAR(255)
             );
