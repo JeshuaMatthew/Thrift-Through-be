@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+const { protect, optionalProtect } = require('../middleware/authMiddleware');
 
 const upload = require('../middleware/uploadMiddleware'); 
 
@@ -8,13 +8,15 @@ const {
     createCommunity, getAllCommunities, getCommunityById, 
     updateCommunity, deleteCommunity, joinCommunity, getOrCreateDM,
     uploadCommunityBanner, getCommunitiesInArea,
-    getMyCommunities, getCommunityMembers, updateMemberStatus
+    getMyCommunities, getCommunityMembers, updateMemberStatus,
+    getMyMemberships
 } = require('../controllers/communityController');
 
 router.get('/', getAllCommunities);
 router.get('/my-communities', protect, getMyCommunities);
+router.get('/memberships', protect, getMyMemberships);
 router.get('/nearby', getCommunitiesInArea);
-router.get('/:id', getCommunityById);
+router.get('/:id', optionalProtect, getCommunityById);
 
 router.post('/', protect, createCommunity);
 router.put('/:id', protect, updateCommunity);

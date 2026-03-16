@@ -53,7 +53,7 @@ const getAllCommunities = async (req, res) => {
     try {
         const { type, search, sortBy, order, page, limit } = req.query;
         
-        let sqlQuery = 'SELECT * FROM communities WHERE is_public = true';
+        let sqlQuery = "SELECT * FROM communities WHERE is_public = true AND community_type != 'directchat'";
         let queryParams = [];
         let paramIndex = 1;
 
@@ -93,7 +93,7 @@ const getAllCommunities = async (req, res) => {
         const result = await pool.query(sqlQuery, queryParams);
 
         // Get total count
-        let countQuery = 'SELECT COUNT(*) FROM communities WHERE is_public = true';
+        let countQuery = "SELECT COUNT(*) FROM communities WHERE is_public = true AND community_type != 'directchat'";
         let countParams = [];
         let countParamIndex = 1;
 
@@ -137,6 +137,15 @@ const getCommunityById = async (req, res) => {
         
         const communityData = result[0];
         communityData.total_members = parseInt(memberCount[0].count);
+        
+        // Include membership status if logged in
+        if (req.user) {
+            const membership = await pool.query(
+                'SELECT status, role FROM community_members WHERE community_id = $1 AND member_id = $2',
+                [id, req.user.id]
+            );
+            communityData.my_membership = membership.length > 0 ? membership[0] : null;
+        }
         
         res.json(communityData);
     } catch (err) {
@@ -321,7 +330,7 @@ const getCommunitiesInArea = async (req, res) => {
                     )
                 ) AS distance
                 FROM communities
-                WHERE is_public = true
+                WHERE community_type != 'directchat'
             ) AS nearby_communities
             WHERE distance <= $3
             ORDER BY distance;
@@ -347,7 +356,7 @@ const getMyCommunities = async (req, res) => {
         let sqlQuery = `
             SELECT DISTINCT c.* FROM communities c
             JOIN community_members cm ON c.community_id = cm.community_id
-            WHERE cm.member_id = $1 AND cm.role = 'Admin'
+            WHERE cm.member_id = $1 AND cm.role = 'Admin' AND c.community_type != 'directchat'
         `;
         let queryParams = [user_id];
         let paramIndex = 2;
@@ -375,7 +384,7 @@ const getMyCommunities = async (req, res) => {
         let countQuery = `
             SELECT COUNT(DISTINCT c.community_id) FROM communities c
             JOIN community_members cm ON c.community_id = cm.community_id
-            WHERE cm.member_id = $1 AND cm.role = 'Admin'
+            WHERE cm.member_id = $1 AND cm.role = 'Admin' AND c.community_type != 'directchat'
         `;
         let countParams = [user_id];
         if (search) {
@@ -452,9 +461,88 @@ const updateMemberStatus = async (req, res) => {
 };
 
 
+const getMyMemberships = async (req, res) => {
+    try {
+        const user_id = req.user.id;
+        const { status, search, sortBy, order, page, limit } = req.query;
+
+        let sqlQuery = `
+            SELECT c.*, cm.role, cm.status as membership_status
+            FROM communities c
+            JOIN community_members cm ON c.community_id = cm.community_id
+            WHERE cm.member_id = $1 AND c.community_type != 'directchat'
+        `;
+        let queryParams = [user_id];
+        let paramIndex = 2;
+
+        if (status) {
+            sqlQuery += ` AND cm.status = $${paramIndex}`;
+            queryParams.push(status);
+            paramIndex++;
+        }
+
+        if (search) {
+            sqlQuery += ` AND (c.community_name ILIKE $${paramIndex} OR c.description ILIKE $${paramIndex})`;
+            queryParams.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        const allowedSortFields = ['community_name', 'community_id'];
+        const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'community_id';
+        const sortOrder = (order && order.toUpperCase() === 'ASC') ? 'ASC' : 'DESC';
+        sqlQuery += ` ORDER BY ${sortField} ${sortOrder}`;
+
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 12;
+        const offset = (pageNum - 1) * limitNum;
+
+        sqlQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        queryParams.push(limitNum, offset);
+
+        const result = await pool.query(sqlQuery, queryParams);
+
+        let countQuery = `
+            SELECT COUNT(*) 
+            FROM communities c
+            JOIN community_members cm ON c.community_id = cm.community_id
+            WHERE cm.member_id = $1 AND c.community_type != 'directchat'
+        `;
+        let countParams = [user_id];
+        let countParamIndex = 2;
+        if (status) {
+            countQuery += ` AND cm.status = $${countParamIndex}`;
+            countParams.push(status);
+            countParamIndex++;
+        }
+        if (search) {
+            countQuery += ` AND (c.community_name ILIKE $${countParamIndex} OR c.description ILIKE $${countParamIndex})`;
+            countParams.push(`%${search}%`);
+        }
+
+        const countResult = await pool.query(countQuery, countParams);
+        const totalItems = parseInt(countResult[0].count);
+
+        res.json({
+            meta: {
+                totalItems,
+                itemCount: result.length,
+                itemsPerPage: limitNum,
+                totalPages: Math.ceil(totalItems / limitNum),
+                currentPage: pageNum
+            },
+            communities: result
+        });
+    } catch (err) {
+        console.error("Error fetching my memberships:", err.message);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+
 module.exports = { 
     createCommunity, getAllCommunities, getCommunityById, 
     updateCommunity, deleteCommunity, joinCommunity, getOrCreateDM,
     uploadCommunityBanner, getCommunitiesInArea,
-    getMyCommunities, getCommunityMembers, updateMemberStatus
+    getMyCommunities, getCommunityMembers, updateMemberStatus,
+    getMyMemberships
 };
